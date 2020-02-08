@@ -1,0 +1,11 @@
+#gitignore file: ignore VS Code related files
+
+#workspaces
+*_workspace.code-workspace
+*.code-workspace
+
+#vs code settings folder
+**/.vscode/
+
+#.exe files
+**/*.exe
