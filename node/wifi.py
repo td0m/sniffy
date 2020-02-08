@@ -27,14 +27,14 @@ def upload_periodically():
     while True:
         global devices
         data = devices
-        devices = []
-        print("done")
+        print(data)
         try:
             r = requests.post(url = endpoint, json = data)
             print(r.text)
         except Exception as e:
             print(e)
-        time.sleep(20)
+        devices = []
+        time.sleep(7)
 
 upload_thread = threading.Thread(target=upload_periodically)
 upload_thread.start()
