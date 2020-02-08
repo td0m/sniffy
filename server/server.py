@@ -1,4 +1,3 @@
-
 import json
 from flask import Flask, request
 
@@ -82,7 +81,10 @@ def nodePostHandler():
     try:
         json_data = json.loads(request.data)
     except ValueError as e:
+        print("bad data")
         return "Malformated json request"
+
+    print(json_data)
 
     add_sniff_data(json_data)
     return "added entries"
