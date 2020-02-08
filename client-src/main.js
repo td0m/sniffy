@@ -1,37 +1,5 @@
 // util functions
 
-let oftenUsed = [
-  "huawei",
-  "samsung",
-  "apple",
-  "motorola",
-  "oneplus",
-  "tp-link",
-  "xiaomi",
-  "d-link",
-  "amazon",
-  "lenovo",
-  "intel",
-  "microsoft",
-  "espressif",
-  "hmd",
-  "lg",
-  "compal",
-  "cybertan",
-  "azurewave"
-];
-const formatName = (name) => {
-  let nameLow = name.toLowerCase();
-  let firstWord = nameLow.split(" ")[0];
-
-  if (firstWord === "murata") return "Samsung";
-
-  if (oftenUsed.indexOf(firstWord) > -1) {
-    return name.split(" ")[0];
-  }
-  return name.split(" ").slice(0, 2).join(" ");
-}
-
 function get_all_data() {
   response = fetch("http://10.14.138.32:5000/node", {
     cors: "no-cors"
@@ -43,7 +11,7 @@ function get_all_data() {
 }
 
 function get_all_names(data) {
-  return data.map((entry) => formatName(entry['name']));
+  return data.map((entry) => entry['name']);
 }
 
 function formatDate(date) {
@@ -91,14 +59,16 @@ function draw_graph(graph_wrapper) {
 
 // graph generating
 
-function getPieChart(data_counts) {
-
-  let data = google.visualization.arrayToDataTable
-([
+function getPieChartData(data_counts)
+{
+  return google.visualization.arrayToDataTable([
     ['Device names', 'counts'],
     ...data_counts
   ]);
+}
 
+function getPieChart()
+{
   let options = {
     title: 'Devices Counts',
     // pieHole: 0.4,
@@ -110,16 +80,18 @@ function getPieChart(data_counts) {
   };
 
   let chart = new google.visualization.PieChart(document.getElementById('names_piechart'));
-  return {graph: chart, data: data, options: options};
+  return {graph: chart, data: undefined, options: options};
 }
 
-function getHeatChart(total) {
+function getHeatChartData(total) {
+  return google.visualization.arrayToDataTable([
+    ['Traffic', 'Density', { role: 'style' }],
+    ['Traffic', total, '#b87333'],            // RGB value
+  ]);
+}
 
-   var data = google.visualization.arrayToDataTable([
-     ['Traffic', 'Density', { role: 'style' }],
-     ['Traffic', total, '#b87333'],            // RGB value
-      ]);
-
+function getHeatChart()
+{
   let options = {
     title: 'Traffic',
     legend: 'none',
@@ -135,15 +107,17 @@ function getHeatChart(total) {
   };
 
   let chart = new google.visualization.PieChart(document.getElementById('traffic_heatChart'));
-  return {graph: chart, data: data, options: options};
+  return {graph: chart, data: undefined, options: options};
 }
 
-function getLineChart(time_series_data) {
-  var data = google.visualization.arrayToDataTable([
+function getLineChartData(time_series_data) {
+  return google.visualization.arrayToDataTable([
     ['Date', 'Count'],
     ...time_series_data
   ]);
+}
 
+function getLineChart() {
   var options = {
     title: 'New devices time line',
     animation:{
@@ -154,8 +128,7 @@ function getLineChart(time_series_data) {
   };
 
   var chart = new google.visualization.LineChart(document.getElementById('line_chart'));
-
-  return {graph: chart, data: data, options: options};
+  return {graph: chart, data: undefined, options: options};
 }
 
 var device_count_graph = undefined;
@@ -173,20 +146,26 @@ function update() {
   drawChart();
 }
 
-(async () => {
+(() => {
   google.charts.load('current', {'packages':['corechart']});
+
+  device_count_graph = getPieChart(counts);
+  traffice_graph = getHeatChart(total);
+  line_graph = getLineChart(time_series);
+})();
+
+(async () => {
   //
   let {data} = await get_all_data();
   let time_series = reform_to_time_series(data);
   let counts = statistic_count(get_all_names(data))
-
   let total = counts.reduce((acc, x) => x[1] + acc, 0);
 
-  console.log(counts);
-  device_count_graph = getPieChart(counts);
-  traffice_graph = getHeatChart(total);
-  line_graph = getLineChart(time_series);
+  device_count_graph.data = getHeatChartData(total);
+  traffice_graph.data = getPieChartData(counts);
+  line_graph.data = getLineChartData(time_series);
 
+  console.log(counts);
   console.log(time_series);
 
   google.charts.setOnLoadCallback(drawChart);
