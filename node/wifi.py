@@ -2,6 +2,7 @@ from scapy.all import *
 import threading
 import requests
 import time
+import json
 
 endpoint = "http://10.14.138.32:5000/node"
 
@@ -33,7 +34,9 @@ def upload_periodically():
             print(r.text)
         except Exception as e:
             print(e)
-        devices = []
+
+        with open('data.json', 'w') as outfile:
+            json.dump(devices, outfile, indent=2)
         time.sleep(7)
 
 upload_thread = threading.Thread(target=upload_periodically)
