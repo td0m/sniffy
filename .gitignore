@@ -9,3 +9,5 @@
 
 #.exe files
 **/*.exe
+
+data*.json
