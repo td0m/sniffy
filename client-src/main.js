@@ -1,5 +1,37 @@
 // util functions
 
+let oftenUsed = [
+  "huawei",
+  "samsung",
+  "apple",
+  "motorola",
+  "oneplus",
+  "tp-link",
+  "xiaomi",
+  "d-link",
+  "amazon",
+  "lenovo",
+  "intel",
+  "microsoft",
+  "espressif",
+  "hmd",
+  "lg",
+  "compal",
+  "cybertan",
+  "azurewave"
+];
+const formatName = (name) => {
+  let nameLow = name.toLowerCase();
+  let firstWord = nameLow.split(" ")[0];
+
+  if (firstWord === "murata") return "Samsung";
+
+  if (oftenUsed.indexOf(firstWord) > -1) {
+    return name.split(" ")[0];
+  }
+  return name.split(" ").slice(0, 2).join(" ");
+}
+
 function get_all_data() {
   response = fetch("http://10.14.138.32:5000/node", {
     cors: "no-cors"
@@ -11,7 +43,7 @@ function get_all_data() {
 }
 
 function get_all_names(data) {
-  return data.map((entry) => entry['name']);
+  return data.map((entry) => formatName(entry['name']));
 }
 
 function formatDate(date) {
