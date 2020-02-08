@@ -67,14 +67,6 @@ function getPieChartData(data_counts)
   ]);
 }
 
-function getPieChartData(data_counts)
-{
-  return google.visualization.arrayToDataTable([
-    ['Device names', 'counts'],
-    ...data_counts
-  ]);
-}
-
 function getPieChart()
 {
   let options = {
