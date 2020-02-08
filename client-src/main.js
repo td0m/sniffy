@@ -46,7 +46,9 @@ function statistic_count(array) {
     if (x === "") x = "unknown";
     occ[x] = (occ[x] || 0) + 1;
   });
-  return Object.keys(occ).map((key) => [key, occ[key]]);
+  return Object.keys(occ)
+    .map((key) => [key, occ[key]])
+    .sort((a,b) => a[1] < b[1]);
 }
 
 // graph op
@@ -124,6 +126,13 @@ function getLineChart() {
       duration: 1000,
       easing: 'out',
     },
+    hAxis: {
+      viewWindow: {
+        min: 1,
+        max: 14
+      },
+      ticks: [1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+    },
     legend: { position: 'bottom' }
   };
 
@@ -136,37 +145,59 @@ var traffice_graph = undefined;
 var line_graph = undefined;
 
 function drawChart() {
-  draw_graph(device_count_graph);
-  draw_graph(traffice_graph);
-  draw_graph(line_graph);
+  if (!device_count_graph)
+    device_count_graph = getPieChart();
+
+  if (!traffice_graph)
+    traffice_graph = getHeatChart();
+
+  if (!line_graph)
+    line_graph = getLineChart();
+
+  (async () => {
+    //
+    let {data} = await get_all_data();
+    let time_series = reform_to_time_series(data);
+    let counts = statistic_count(get_all_names(data))
+    let total = counts.reduce((acc, x) => x[1] + acc, 0);
+
+    device_count_graph.data = getPieChartData(counts);
+    traffice_graph.data = getHeatChartData(total);
+    line_graph.data = getLineChartData(time_series);
+
+    console.log(counts);
+    console.log(time_series);
+
+    draw_graph(device_count_graph);
+    draw_graph(traffice_graph);
+    draw_graph(line_graph);
+  })();
 }
 
-function update() {
-  data = new_data;
+function test_butn_click() {
+  console.log("button clicked");
   drawChart();
 }
 
-(() => {
-  google.charts.load('current', {'packages':['corechart']});
+google.charts.load('current', {'packages':['corechart']});
+google.charts.setOnLoadCallback(drawChart);
 
-  device_count_graph = getPieChart();
-  traffice_graph = getHeatChart();
-  line_graph = getLineChart();
-})();
+// document.addEventListener("DOMContentLoaded", async () => {
+//   //
+//   let {data} = await get_all_data();
+//   let time_series = reform_to_time_series(data);
+//   let counts = statistic_count(get_all_names(data))
+//   let total = counts.reduce((acc, x) => x[1] + acc, 0);
 
-(async () => {
-  //
-  let {data} = await get_all_data();
-  let time_series = reform_to_time_series(data);
-  let counts = statistic_count(get_all_names(data))
-  let total = counts.reduce((acc, x) => x[1] + acc, 0);
+//   device_count_graph = getPieChart();
+//   traffice_graph = getHeatChart();
+//   line_graph = getLineChart();
 
-  device_count_graph.data = getHeatChartData(total);
-  traffice_graph.data = getPieChartData(counts);
-  line_graph.data = getLineChartData(time_series);
+//   device_count_graph.data = getPieChartData(counts);
+//   traffice_graph.data = getHeatChartData(total);
+//   line_graph.data = getLineChartData(time_series);
 
-  console.log(counts);
-  console.log(time_series);
+//   console.log(counts);
+//   console.log(time_series);
 
-  google.charts.setOnLoadCallback(drawChart);
-})();
+// });
