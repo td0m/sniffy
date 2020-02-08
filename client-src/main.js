@@ -149,9 +149,9 @@ function update() {
 (() => {
   google.charts.load('current', {'packages':['corechart']});
 
-  device_count_graph = getPieChart(counts);
-  traffice_graph = getHeatChart(total);
-  line_graph = getLineChart(time_series);
+  device_count_graph = getPieChart();
+  traffice_graph = getHeatChart();
+  line_graph = getLineChart();
 })();
 
 (async () => {
