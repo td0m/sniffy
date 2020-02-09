@@ -1,7 +1,7 @@
 # "WIFI-LANCE"
 
 Team members: \
-Dominik Tarnowski, Danny He, Olaf Czerwiński, Aly Dardouk, Liga Anwar, Karthik Sathyanarayanan
+Dominik Tarnowski, Danny He, Olaf Czerwiński, Alya Dardouk, Liga Anwar, Karthik Sathyanarayanan
 
 To start scanning device run:
 ```bash
