@@ -1,71 +1,40 @@
+
 import json
 from flask import Flask, request
-
-import enum
-from typing import NamedTuple
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # TODO - use data base instead
-data = {}
-
-# data structs
-
-class State(enum.Enum):
-    new = 0   # got into range
-    probe = 1 # still within range
-    lost = 2  # out of range
-
-def get_state_name(state):
-    return State[state].name
-
-class DeviceLog(NamedTuple):
-    time: int
-    state: State
-    strength: int
-
-def encode_devicelog(log):
-    return {"time": log.time,
-            "state": get_state_name(log.state),
-            "strength": log.strength}
-
-class MacEntry(NamedTuple):
-    name: str
-    logs: list
-
-def encode_entry(e):
-    return {"name": e.name,
-            "logs": [encode_devicelog(log) for log in e.logs]}
+data = []
 
 # data logic
 
 def make_log(json_entry):
     time = json_entry["time"]
-    state = json_entry["state"]
     strength = json_entry["strength"]
-    return DeviceLog(time, state, strength)
+    return {'time': time, 'strength': strength}
 
 def make_mac_entry(json_entry):
+    mac = json_entry['mac']
     name = json_entry["name"]
-    logs = []
-    return MacEntry(name, logs)
+    return {"name": name, "logs": []}
 
 def get_mac_entry(json_entry):
     print(json_entry)
-    entry_mac = json_entry["entry"] # get mac address
-    if entry_mac in data:
-        encoded_entry = encode_entry(data[entry_mac])
-        print(encoded_entry)
-        return encoded_entry
+    # entry_mac = json_entry["entry"] # get mac address
     return "nope"
 
 def add_sniff_data(json_data):
+    new_frame = {}
     for entry in json_data:
         mac = entry["mac"]
         new_log = make_log(entry)
-        if not mac in data:
-            data[mac] = make_mac_entry(entry)
-        data[mac].logs.append(new_log)
+        if not (mac in new_frame):
+            new_frame[mac] = make_mac_entry(entry)
+        new_frame[mac].logs.append(new_log)
+    data.append(new_frame)
 
 # server main logic
 
@@ -80,9 +49,8 @@ def nodePostHandler():
 
     try:
         json_data = json.loads(request.data)
-    except ValueError as e:
-        print("bad data")
-        return "Malformated json request"
+    except ValueError:
+        return "(POST) Malformated json request"
 
     print(json_data)
 
@@ -91,14 +59,15 @@ def nodePostHandler():
 
 @app.route("/node", methods=["GET"])
 def nodeGetHandler():
-    if len(request.data) == 0:
-        return "Malformated query request"
+    return {'data': data}
+    # if len(request.data) == 0:
+    #     return "(GET) Malformated query request"
 
-    try:
-        json_data = json.loads(request.data)
-    except ValueError as e:
-        return "Malformated json request"
-    return get_mac_entry(json_data)
+    # try:
+    #     json_data = json.loads(request.data)
+    # except ValueError:
+    #     return "Malformated json request"
+    # return get_mac_entry(json_data)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
