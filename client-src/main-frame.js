@@ -10,19 +10,7 @@ function get_all_data() {
   return response;
 }
 
-function get_all_names(data) {
-  return data.map((entry) => entry['name']);
-}
-
 function formatDate(date) {
-  // var hours = date.getHours();
-  // var minutes = date.getMinutes();
-  // var ampm = hours >= 12 ? 'pm' : 'am';
-  // hours = hours % 12;
-  // hours = hours ? hours : 12; // the hour '0' should be '12'
-  // minutes = minutes < 10 ? '0'+minutes : minutes;
-  // var strTime = hours + ':' + minutes + ' ' + ampm;
-  // return strTime;
   const getFrameI = timeUnix => Math.floor(timeUnix / 60 / 10)
 
   const lastFrame = getFrameI(Date.now() / 1000)
@@ -35,30 +23,27 @@ function formatDate(date) {
   return `${frameDiff}`
 }
 
-function reform_to_time_series(data) {
-  const occ = {}
-  data.forEach(function (entry, index) {
-    if (entry.name != "") {
-      entry.logs.forEach(function (log, index) {
-        let date = new Date(Math.round(log.time * 1000));
-        let time = formatDate(log.time)
-        occ[time] = (occ[time] || 0) + 1;
-      });
+function devices_per_unit_frame(frames) {
+  return frames.map((frame) => {
+    if (frame.length > 0) {
+      return [frame[0].time, frame.length];
     }
+    return [-1, 0];
   });
-  return Object.keys(occ).map((key) => [key, occ[key]]);
 }
 
 // build a list that contains all the unique item's count
-function statistic_count(array) {
-  const occ = {}
-  array.forEach((x) => {
-    if (x === "") x = "unknown";
-    occ[x] = (occ[x] || 0) + 1;
+function names_count_each_frame(frames) {
+  return frames.map((frame) => {
+    const occ = {}
+    frame.forEach((entry) => {
+      if (entry.name === "") entry.name = "unknown";
+      occ[entry.name] = (occ[entry.name] || 0) + 1;
+    })
+    return Object.keys(occ)
+      .map((key) => [key, occ[key]])
+      .sort((a,b) => a[1] < b[1]);
   });
-  return Object.keys(occ)
-    .map((key) => [key, occ[key]])
-    .sort((a,b) => a[1] < b[1]);
 }
 
 // graph op
@@ -73,6 +58,7 @@ function draw_graph(graph_wrapper) {
 
 function getPieChartData(data_counts)
 {
+  console.log(data_counts);
   return google.visualization.arrayToDataTable([
     ['Device names', 'counts'],
     ...data_counts
@@ -96,6 +82,7 @@ function getPieChart()
 }
 
 function getHeatChartData(total) {
+  console.log(toatl);
   return google.visualization.arrayToDataTable([
     ['Traffic', 'Density', { role: 'style' }],
     ['Traffic', total, '#b87333'],            // RGB value
@@ -123,6 +110,7 @@ function getHeatChart()
 }
 
 function getLineChartData(time_series_data) {
+  console.log(time_series_data);
   return google.visualization.arrayToDataTable([
     ['Date', 'Count'],
     ...time_series_data
@@ -160,8 +148,8 @@ function drawChart() {
   (async () => {
     //
     let {data} = await get_all_data();
-    let time_series = reform_to_time_series(data);
-    let counts = statistic_count(get_all_names(data))
+    let time_series = devices_per_unit_frame(data);
+    let counts = names_count_each_frame(data);
     let total = counts.reduce((acc, x) => x[1] + acc, 0);
 
     device_count_graph.data = getPieChartData(counts);
@@ -184,23 +172,3 @@ function test_butn_click() {
 
 google.charts.load('current', {'packages':['corechart']});
 google.charts.setOnLoadCallback(drawChart);
-
-// document.addEventListener("DOMContentLoaded", async () => {
-//   //
-//   let {data} = await get_all_data();
-//   let time_series = reform_to_time_series(data);
-//   let counts = statistic_count(get_all_names(data))
-//   let total = counts.reduce((acc, x) => x[1] + acc, 0);
-
-//   device_count_graph = getPieChart();
-//   traffic_graph = getHeatChart();
-//   line_graph = getLineChart();
-
-//   device_count_graph.data = getPieChartData(counts);
-//   traffic_graph.data = getHeatChartData(total);
-//   line_graph.data = getLineChartData(time_series);
-
-//   console.log(counts);
-//   console.log(time_series);
-
-// });

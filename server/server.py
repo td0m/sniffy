@@ -11,15 +11,12 @@ data = []
 
 # data logic
 
-def make_log(json_entry):
-    time = json_entry["time"]
-    strength = json_entry["strength"]
-    return {'time': time, 'strength': strength}
-
 def make_mac_entry(json_entry):
     mac = json_entry['mac']
     name = json_entry["name"]
-    return {"name": name, "logs": []}
+    time = json_entry["time"]
+    strength = json_entry["strength"]
+    return {'mac': mac, 'name': name, 'time': time, 'strength': strength}
 
 def get_mac_entry(json_entry):
     print(json_entry)
@@ -27,13 +24,7 @@ def get_mac_entry(json_entry):
     return "nope"
 
 def add_sniff_data(json_data):
-    new_frame = {}
-    for entry in json_data:
-        mac = entry["mac"]
-        new_log = make_log(entry)
-        if not (mac in new_frame):
-            new_frame[mac] = make_mac_entry(entry)
-        new_frame[mac].logs.append(new_log)
+    new_frame = [make_mac_entry(entry) for entry in json_data]
     data.append(new_frame)
 
 # server main logic

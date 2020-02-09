@@ -14,21 +14,11 @@ app = Flask(__name__)
 
 CORS(app)
 
-# data structs
-
-class State(enum.Enum):
-    new = 0   # got into range
-    probe = 1 # still within range
-    lost = 2  # out of range
-
-def get_state_name(state):
-    return State[state].name
-
 # db op
 
-def find_mac_in_db(db, json_query):
+def find_by_frame_n_mac_in_db(db, json_query):
     entry = Query()
-    if "mac" in json_query:
+    if "frameId" in json_query:
         mac = json_query["mac"] # get mac address
         return db.search(entry.mac == mac)
     elif "name" in json_query:
@@ -45,9 +35,8 @@ def reset_db(db):
 
 def make_log(json_entry):
     time = json_entry["time"]
-    state = json_entry["state"]
     strength = json_entry["strength"]
-    return {"time": time, "state": state, "strength": strength}
+    return {"time": time, "strength": strength}
 
 def make_mac_entry(json_entry):
     mac = json_entry["mac"]
