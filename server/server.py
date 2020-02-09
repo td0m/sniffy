@@ -1,10 +1,10 @@
+
 import json
 from flask import Flask, request
-
-import enum
-from typing import NamedTuple
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # TODO - use data base instead
 data = []
