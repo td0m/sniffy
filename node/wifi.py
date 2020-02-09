@@ -3,6 +3,7 @@ import threading
 import requests
 import time
 import json
+import math
 from mac_vendor_lookup import MacLookup
 
 endpoint = "http://10.14.138.32:5000/node"
@@ -10,9 +11,49 @@ endpoint = "http://10.14.138.32:5000/node"
 devices = []
 allTime = []
 
-unique = []
+startTime = time.time()
 
 lookup = MacLookup()
+
+frameId = 0
+
+def shouldAppend(mac):
+    for d in devices:
+        if d["mac"] == mac:
+            return False
+    return True
+
+oftenUsed = [
+  "huawei",
+  "samsung",
+  "apple",
+  "motorola",
+  "oneplus",
+  "tp-link",
+  "xiaomi",
+  "d-link",
+  "amazon",
+  "lenovo",
+  "intel",
+  "microsoft",
+  "espressif",
+  "hmd",
+  "lg",
+  "compal",
+  "cybertan",
+  "azurewave"
+  ]
+
+def formatName(name):
+    lowerName = name.lower()
+    firstWord = lowerName.split(" ")[0]
+    if firstWord == "murata":
+        return "Samsung"
+
+    if firstWord in oftenUsed:
+        return name.split(" ")[0]
+    
+    return " ".join(name.split(" ")[0:2])
 
 def PacketHandler(pkt):
     if pkt.haslayer(Dot11):
@@ -22,27 +63,26 @@ def PacketHandler(pkt):
         if pkt.type == 0 and pkt.subtype == 4:
             if pkt.addr2 not in devices:
                 signal = pkt.getfieldval('dBm_AntSignal')
-                if pkt.addr2 not in unique:
-                    manufacturer = "-"
-                    try:
-                        manufacturer = lookup.lookup(pkt.addr2)
-                        unique.append(pkt.addr2)
+                manufacturer = "-"
+                try:
+                    manufacturer = lookup.lookup(pkt.addr2)
+                    if shouldAppend(pkt.addr2):
                         devices.append({
-                            "state": "new",
                             "time": time.time(),
                             "mac": pkt.addr2,
                             #"name": pkt.info.decode("utf-8"),
-                            "name": manufacturer,
-                            "strength": signal
+                            "name": formatName(manufacturer),
+                            "strength": signal,
                         })
-                        print(f"size: {len(unique)}, device: {pkt.addr2}, manufacturer: {manufacturer}")
-                    except Exception:
-                        # yay
-                        print("")
-                        
+                        print(f"[{frameId}]: {pkt.addr2}")
+                except Exception as e:
+                    x=1
+                    print(e)
 
 def upload_periodically():
     while True:
+        time.sleep(60 * 1)
+        global frameId
         global devices
         global allTime
         data = devices
@@ -55,11 +95,12 @@ def upload_periodically():
 
         devices = []
 
-        with open('data.json', 'w') as outfile:
+        with open(f"data{round(startTime)}.json", 'w') as outfile:
             json.dump(allTime, outfile, indent=2)
-        time.sleep(20)
+        frameId += 1
 
 upload_thread = threading.Thread(target=upload_periodically)
 upload_thread.start()
 
+print("sniffing")
 sniff(iface="wlp0s20f0u1", prn = PacketHandler)
