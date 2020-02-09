@@ -51,7 +51,7 @@ def nodePostHandler():
 @app.route("/node", methods=["GET"])
 def nodeGetHandler():
     data = {}
-    with open("history.json") as json_file:
+    with open("formatted.json") as json_file:
         data = json.load(json_file)
     return {'data': data}
     # if len(request.data) == 0:

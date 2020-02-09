@@ -26,7 +26,7 @@ function formatDate(date) {
 function devices_per_unit_frame(frames) {
   return frames.map((frame) => {
     if (frame.length > 0) {
-      return [frame[0].time, frame.length];
+      return [new Date(frame[0].time * 1000), frame.length];
     }
     return [-1, 0];
   });
